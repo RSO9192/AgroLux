@@ -71,7 +71,7 @@ fig4b %>%
 ggsave("../results/fig4b.svg", width = 10, height = 12, units = "cm")
 
 
-# Groups for statistical significant
+# Groups for statistical significance
 
 c_2dpi <- fig4b %>% 
   filter(Treatments=="Cf4+Avr4", dpi==2) %>% 
