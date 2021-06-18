@@ -24,6 +24,7 @@ ggplot(aes(Treatments, Mean)) +
   ylab("GFP (RFUx1000)")+
   theme(axis.text.x = element_text(angle = 45, hjust=1))
 
+ggsave("../results/fig2b.pdf", width = 7, height = 12, units = "cm")
 ggsave("../results/fig2b.svg", width = 7, height = 12, units = "cm")
 
 
@@ -47,6 +48,7 @@ fig2c %>%
   ylab("Luminescence (RLU)")+
   theme(axis.text.x = element_text(angle = 45, hjust=1))
 
+ggsave("../results/fig2c.pdf", width = 7, height = 12, units = "cm")
 ggsave("../results/fig2c.svg", width = 7, height = 12, units = "cm")
 
 
@@ -68,6 +70,7 @@ fig4b %>%
   facet_wrap(~dpi) +
   theme(axis.text.x = element_text(angle = 45, hjust=1))
 
+ggsave("../results/fig4b.pdf", width = 10, height = 12, units = "cm")
 ggsave("../results/fig4b.svg", width = 10, height = 12, units = "cm")
 
 
