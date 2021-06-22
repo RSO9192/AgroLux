@@ -1,0 +1,5 @@
+Comparison,DPI,p.value
+Control-Avr4,2,0.001
+Control-Cf4,2,0.009
+Control-Avr4,5,2e-4
+Control-Cf4,5,6e-4
