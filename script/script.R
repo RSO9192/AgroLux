@@ -85,7 +85,7 @@ ggsave("../results/fig3c.svg", width = 10, height = 12, units = "cm")
 # statistical significance at 1 dpi
 
 fig3c.mod <- fig3c %>% 
-  filter(Treatments!="Ctrl") %>% 
+  filter(dpi==1) %>% 
   mutate(Treatments=as.factor(Treatments))
 
 dpi_1_aov <- gls(Mean~Treatments, data = fig3c.mod)
@@ -96,7 +96,8 @@ dpi_1_aov_het <-  gls(Mean~Treatments, data = fig3c.mod, weights = vs)
 
 anova(dpi_1_aov, dpi_1_aov_het) # the second model, with a flexible variance per tratemnet is not a better model. 
 
-anova(dpi_1_aov) # no significance
+anova(dpi_1_aov) # non significant
+
 
 
 # figure 3d ---------------------------------------------------------------
@@ -143,7 +144,6 @@ summary(dpi_4_aov_het) # t.value of 8.4 between high and low but not significant
 
 
 # figure 4b ---------------------------------------------------------------
-
 
 
 fig4b <- read_excel("../data/supp_tables_dataset_AgroLux_paper_v2.xlsx", sheet = 8, skip = 7, n_max = 37) %>%
