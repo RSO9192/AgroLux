@@ -1,5 +1,7 @@
 library(tidyverse)
 library(readxl)
+library(lme4)
+library(nlme)
 source("~/theme_publication.R")
 
 
@@ -56,6 +58,88 @@ fig2c %>%
 ggsave("../results/fig2c.pdf", width = 7, height = 12, units = "cm")
 ggsave("../results/fig2c.svg", width = 7, height = 12, units = "cm")
 
+
+
+# figure 3c ---------------------------------------------------------------
+
+fig3c <- read_excel("../data/supp_tables_dataset_AgroLux_paper_v2.xlsx", sheet = 6, skip = 7, n_max = 200) %>% 
+  group_by(Treatments, Plant, dpi) %>% 
+  summarise(Mean=mean(`Mean – Background*`, na.rm = TRUE)) %>% 
+  mutate(Mean=ifelse(Mean<0, 0, Mean)) %>% 
+  filter(Treatments!="Ctrl")
+
+fig3c %>% 
+  group_by(Treatments, dpi) %>% 
+  summarise(N=n(),  sd=sd(Mean), se=sd/sqrt(N), Mean=mean(Mean)) %>% 
+  mutate(se=se, Mean=Mean) %>% 
+  ggplot(aes(dpi, Mean, color=Treatments)) +
+  geom_line(size=1)+
+  geom_errorbar(aes(ymin=Mean-se, ymax=Mean+se),width=0.1, size=1)+
+  geom_jitter(data=fig3c, aes(dpi, Mean, color=Treatments), size=2, alpha=0.6, width = 0.1)+
+  theme_Publication(base_size = 12)+
+  ylab("Luminescence (RLU)")
+
+ggsave("../results/fig3c.pdf", width = 10, height = 12, units = "cm")
+ggsave("../results/fig3c.svg", width = 10, height = 12, units = "cm")
+
+# statistical significance at 1 dpi
+
+fig3c.mod <- fig3c %>% 
+  filter(Treatments!="Ctrl") %>% 
+  mutate(Treatments=as.factor(Treatments))
+
+dpi_1_aov <- gls(Mean~Treatments, data = fig3c.mod)
+plot(dpi_1_aov)
+# accounting for non-heterogeneity
+vs <- varIdent(form = ~ 1 | Treatments)
+dpi_1_aov_het <-  gls(Mean~Treatments, data = fig3c.mod, weights = vs)
+
+anova(dpi_1_aov, dpi_1_aov_het) # the second model, with a flexible variance per tratemnet is not a better model. 
+
+anova(dpi_1_aov) # no significance
+
+
+# figure 3d ---------------------------------------------------------------
+
+fig3d <- read_excel("../data/supp_tables_dataset_AgroLux_paper_v2.xlsx", sheet = 7, skip = 7, n_max = 200) %>% 
+  group_by(Treatments, Plant, dpi) %>% 
+  summarise(Mean=mean(`Mean – Background*`, na.rm = TRUE)) %>% 
+  filter(Treatments!="Ctrl") %>% 
+  mutate(Mean=ifelse(Mean<0, 0, Mean))
+
+fig3d %>% 
+  group_by(Treatments, dpi) %>% 
+  summarise(N=n(),  sd=sd(Mean), se=sd/sqrt(N), Mean=mean(Mean)) %>% 
+  mutate(se=se, Mean=Mean) %>% 
+  ggplot(aes(dpi, Mean, color=Treatments)) +
+  geom_line(size=1)+
+  geom_errorbar(aes(ymin=Mean-se, ymax=Mean+se),width=0.1, size=1)+
+  geom_jitter(data=fig3d, aes(dpi, Mean, color=Treatments), size=2, alpha=0.6, width = 0.1)+
+  theme_Publication(base_size = 12)+
+  ylab("GFP fluorescence")
+
+ggsave("../results/fig3d.pdf", width = 10, height = 12, units = "cm")
+ggsave("../results/fig3d.svg", width = 10, height = 12, units = "cm")
+
+
+# statistical significance at 4 dpi
+
+fig3d.mod <- fig3d %>% 
+  filter(dpi==4) %>% 
+  mutate(Treatments=as.factor(Treatments))
+
+dpi_4_aov <- gls(Mean~Treatments, data = fig3d.mod)
+
+plot(dpi_4_aov)
+# accounting for non-heterogeneity
+vs <- varIdent(form = ~ 1 | Treatments)
+dpi_4_aov_het <-  gls(Mean~Treatments, data = fig3d.mod, weights = vs)
+
+anova(dpi_4_aov, dpi_4_aov_het) # the second model, with a flexible variance per tratemnet is a better model. 
+
+anova(dpi_4_aov_het) # significant. 
+
+summary(dpi_4_aov_het) # t.value of 8.4 between high and low but not significant between medium and high
 
 
 # figure 4b ---------------------------------------------------------------
