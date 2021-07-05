@@ -49,7 +49,7 @@ fig2c %>%
                                   "WT + WT(GFP)", "LUX + WT(GFP)", "WT + LUX(GFP)")) %>%
   ggplot(aes(Treatments, Mean)) +
   geom_bar(stat="identity", width = 0.6, color="black", fill="red", alpha=0.5)+
-  geom_errorbar(aes(ymin=Mean-se, ymax=Mean+se),width=0.5)+
+  geom_errorbar(aes(ymin=Mean-se, ymax=Mean+se),width=0.3)+
   geom_jitter(data=fig2c, aes(Treatments, Mean), size=3, alpha=0.6, width = 0.1)+
   theme_Publication(base_size = 12)+
   ylab("Luminescence (RLU)")+
@@ -65,39 +65,46 @@ ggsave("../results/fig2c.svg", width = 7, height = 12, units = "cm")
 fig3c <- read_excel("../data/supp_tables_dataset_AgroLux_paper_v2.xlsx", sheet = 6, skip = 7, n_max = 200) %>% 
   group_by(Treatments, Plant, dpi) %>% 
   summarise(Mean=mean(`Mean – Background*`, na.rm = TRUE)) %>% 
-  mutate(Mean=ifelse(Mean<0, 0, Mean)) %>% 
+  mutate(Mean=ifelse(Mean<0, 0, Mean), Mean=Mean/100) %>% 
   filter(Treatments!="Ctrl")
+
 
 fig3c %>% 
   group_by(Treatments, dpi) %>% 
   summarise(N=n(),  sd=sd(Mean), se=sd/sqrt(N), Mean=mean(Mean)) %>% 
-  mutate(se=se, Mean=Mean) %>% 
-  ggplot(aes(dpi, Mean, color=Treatments)) +
-  geom_line(size=1)+
-  geom_errorbar(aes(ymin=Mean-se, ymax=Mean+se),width=0.1, size=1)+
-  geom_jitter(data=fig3c, aes(dpi, Mean, color=Treatments), size=2, alpha=0.6, width = 0.1)+
+  mutate(se=se, Mean=Mean, Treatments=as.factor(Treatments),Treatments=fct_relevel(Treatments, "Low", "Medium", "High")) %>% 
+  ggplot(aes(dpi, Mean, fill=Treatments)) +
+  geom_bar(stat="identity", position = position_dodge(width=0.9), color="black")+
+  geom_errorbar(aes(ymin=Mean-se, ymax=Mean+se),width=0.3, size=1, position = position_dodge(width=0.9))+
+  geom_point(data=fig3c, aes(dpi, Mean, color=Treatments), color="black", position = position_dodge(width=0.9),size=3, alpha=0.6)+
   theme_Publication(base_size = 12)+
-  ylab("Luminescence (RLU)")
+  ylab("Luminescence (RLU X 100)")+
+ theme(legend.position = "none")+
+  scale_fill_manual(values = c("red", "orange","yellow"))
 
 ggsave("../results/fig3c.pdf", width = 10, height = 12, units = "cm")
 ggsave("../results/fig3c.svg", width = 10, height = 12, units = "cm")
 
-# statistical significance at 1 dpi
+# statistical significance at each dpis
 
-fig3c.mod <- fig3c %>% 
-  filter(dpi==1) %>% 
-  mutate(Treatments=as.factor(Treatments))
+mod_dpis <- map(1:4, function(x) {
+  
+  fig3c.mod <- fig3c %>% 
+    filter(dpi==x) %>% 
+    mutate(Treatments=as.factor(Treatments))
+  
+  dpi_1_aov <- gls(Mean~Treatments, data = fig3c.mod)
+  
+  anova(dpi_1_aov) [] 
+  
+  
+})
 
-dpi_1_aov <- gls(Mean~Treatments, data = fig3c.mod)
-plot(dpi_1_aov)
-# accounting for non-heterogeneity
-vs <- varIdent(form = ~ 1 | Treatments)
-dpi_1_aov_het <-  gls(Mean~Treatments, data = fig3c.mod, weights = vs)
+# non significant
 
-anova(dpi_1_aov, dpi_1_aov_het) # the second model, with a flexible variance per tratemnet is not a better model. 
+p.value <- data.frame(dpi=1:4, anova=c("F(2,9)= 2.032, p=0.18", "F(2,9)= 0.16, p=0.85", "F(2,9)= 0.89, p=0.44", "F(2,9)= 1.12, p=0.37"))
 
-anova(dpi_1_aov) # non significant
-
+write_csv(p.value, "../results/pvalues_fig3c.csv")
 
 
 # figure 3d ---------------------------------------------------------------
@@ -106,41 +113,54 @@ fig3d <- read_excel("../data/supp_tables_dataset_AgroLux_paper_v2.xlsx", sheet =
   group_by(Treatments, Plant, dpi) %>% 
   summarise(Mean=mean(`Mean – Background*`, na.rm = TRUE)) %>% 
   filter(Treatments!="Ctrl") %>% 
-  mutate(Mean=ifelse(Mean<0, 0, Mean))
+  mutate(Mean=ifelse(Mean<0, 0, Mean), Mean=Mean/1000)
 
 fig3d %>% 
   group_by(Treatments, dpi) %>% 
   summarise(N=n(),  sd=sd(Mean), se=sd/sqrt(N), Mean=mean(Mean)) %>% 
-  mutate(se=se, Mean=Mean) %>% 
-  ggplot(aes(dpi, Mean, color=Treatments)) +
-  geom_line(size=1)+
-  geom_errorbar(aes(ymin=Mean-se, ymax=Mean+se),width=0.1, size=1)+
-  geom_jitter(data=fig3d, aes(dpi, Mean, color=Treatments), size=2, alpha=0.6, width = 0.1)+
+  mutate(se=se, Mean=Mean, Treatments=as.factor(Treatments),Treatments=fct_relevel(Treatments, "Low", "Medium", "High")) %>% 
+  ggplot(aes(dpi, Mean, fill=Treatments)) +
+  geom_bar(stat="identity", position = position_dodge(width=0.9), color="black")+
+  geom_errorbar(aes(ymin=Mean-se, ymax=Mean+se),width=0.3, size=1, position = position_dodge(width=0.9))+
+  geom_point(data=fig3d, aes(dpi, Mean, color=Treatments), color="black", position = position_dodge(width=0.9),size=3, alpha=0.6)+
   theme_Publication(base_size = 12)+
-  ylab("GFP fluorescence")
+  ylab("GFP (RFU X 1000)")+
+  theme(legend.position = "none")+
+  scale_fill_manual(values = c("red", "orange","yellow"))+
+  ylim(0,20)
+
 
 ggsave("../results/fig3d.pdf", width = 10, height = 12, units = "cm")
 ggsave("../results/fig3d.svg", width = 10, height = 12, units = "cm")
 
 
-# statistical significance at 4 dpi
+# model comparison at each dpi
 
-fig3d.mod <- fig3d %>% 
-  filter(dpi==4) %>% 
-  mutate(Treatments=as.factor(Treatments))
+comp.mod <- map(1:4, function(x) {
+  
+  fig3d.mod <- fig3d %>% 
+    filter(dpi==x) %>% 
+    mutate(Treatments=as.factor(Treatments))
+  
+  dpi_aov <- gls(Mean~Treatments, data = fig3d.mod)
+  
+  # accounting for non-heterogeneity
+  vs <- varIdent(form = ~ 1 | Treatments)
+  dpi_aov_het <-  gls(Mean~Treatments, data = fig3d.mod, weights = vs)
+  
+  print(anova(dpi_aov, dpi_aov_het)) 
 
-dpi_4_aov <- gls(Mean~Treatments, data = fig3d.mod)
+  print(anova(dpi_aov_het)) 
+  
+})
 
-plot(dpi_4_aov)
-# accounting for non-heterogeneity
-vs <- varIdent(form = ~ 1 | Treatments)
-dpi_4_aov_het <-  gls(Mean~Treatments, data = fig3d.mod, weights = vs)
+# Only at 4 dpi the more complex model is better. It is also the only model to have significance of the results. 
 
-anova(dpi_4_aov, dpi_4_aov_het) # the second model, with a flexible variance per tratemnet is a better model. 
 
-anova(dpi_4_aov_het) # significant. 
+p.value <- data.frame(dpi=1:4, anova=c("F(2,9)= 0.26, p=0.77", "F(2,9)= 1.45, p=0.28", "F(2,9)= 0.99, p=0.40", "F(2,9)= 36.48, p<0.0001"))
 
-summary(dpi_4_aov_het) # t.value of 8.4 between high and low but not significant between medium and high
+write_csv(p.value, "../results/pvalues_fig3d.csv")
+
 
 
 # figure 4b ---------------------------------------------------------------
