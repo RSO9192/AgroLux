@@ -1,0 +1,22 @@
+Analysis of Variance Table
+
+Response: Mean
+           Df  Sum Sq Mean Sq F value    Pr(>F)    
+Treatments  3 17672.9  5891.0  13.703 4.372e-05 ***
+Residuals  20  8597.9   429.9                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+  Tukey multiple comparisons of means
+    95% family-wise confidence level
+
+Fit: aov(formula = Mean ~ Treatments, data = fig7b_5dpi)
+
+$Treatments
+                              diff        lwr       upr     p adj
+Cf2+Avr2-Avr2+Rcr3      -15.121667  -48.62706  18.38373 0.5957046
+Cf2+Rcr3-Avr2+Rcr3       -7.941500  -41.44689  25.56389 0.9095467
+Cf2+Rcr3+Avr2-Avr2+Rcr3 -69.126667 -102.63206 -35.62127 0.0000656
+Cf2+Rcr3-Cf2+Avr2         7.180167  -26.32523  40.68556 0.9309180
+Cf2+Rcr3+Avr2-Cf2+Avr2  -54.005000  -87.51039 -20.49961 0.0011266
+Cf2+Rcr3+Avr2-Cf2+Rcr3  -61.185167  -94.69056 -27.67977 0.0002882
+

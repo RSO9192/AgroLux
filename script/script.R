@@ -753,3 +753,32 @@ ggsave(
   height = 12,
   units = "cm"
 )
+
+
+# statistics 2dpi
+
+fig7b_2dpi <- fig7b %>% 
+  filter(dpi==2)
+
+mod_fig.7b <- aov(Mean~Treatments, data = fig7b_2dpi)
+
+mod_out <- anova(mod_fig.7b)
+
+(posthoc <- TukeyHSD(x=mod_fig.7b , 'Treatments', conf.level=0.95))
+
+capture.output(mod_out,posthoc, file = "../results/stat_fig7b_2dpi.txt")
+
+
+# statistics 5dpi
+
+fig7b_5dpi <- fig7b %>% 
+  filter(dpi==5)
+
+mod_fig.7b <- aov(Mean~Treatments, data = fig7b_5dpi)
+
+mod_out <- anova(mod_fig.7b)
+
+(posthoc <- TukeyHSD(x=mod_fig.7b , 'Treatments', conf.level=0.95))
+
+capture.output(mod_out,posthoc, file = "../results/stat_fig7b_5dpi.txt")
+
