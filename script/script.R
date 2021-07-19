@@ -50,6 +50,49 @@ ggsave(
 )
 
 
+# figure 2D -------------------------------------------------------------
+
+fig2d <-
+  read_excel(
+    "../data/supp_tables_dataset_AgroLux_paper_v5.xlsx",
+    sheet = 4,
+    skip = 7,
+    n_max = 200
+  ) %>% 
+  select(`Final OD`, Treatments, `Lux OD`, `Log10 CFU/Cm2...16`) %>% 
+  rename(Mean=`Log10 CFU/Cm2...16`, OD=`Lux OD`)
+
+
+
+fig2d %>% 
+  group_by(`Final OD`, OD) %>% 
+  summarise(Mean2=mean(Mean), sd=sd(Mean), N=n(), se=sd/sqrt(N)) %>% 
+  mutate(Mean=Mean2) %>% 
+  ggplot(aes(OD, Mean)) +
+  geom_smooth(method = "lm", color="Red", se = FALSE)+
+  geom_jitter(data=fig2d, size=2, alpha=0.5)+
+  geom_point(size=4, alpha=0.8, color="Red3")+
+  geom_errorbar(aes(ymin = Mean - se, ymax = Mean + se), width = 0.1)+
+  facet_rep_wrap(.~`Final OD`, nrow = 2, repeat.tick.labels = "all")+
+  theme_Publication(base_size = 12)
+
+ggsave(
+  "../results/fig2d.pdf",
+  width = 7,
+  height = 12,
+  units = "cm"
+)
+
+ggsave(
+  "../results/fig2d.svg",
+  width = 7,
+  height = 12,
+  units = "cm"
+)
+
+
+
+
 
 # figure 3B ---------------------------------------------------------------
 
