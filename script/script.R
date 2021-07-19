@@ -59,9 +59,9 @@ fig2d <-
     skip = 7,
     n_max = 200
   ) %>% 
-  select(`Final OD`, Treatments, `Lux OD`, `Log10 CFU/Cm2...16`) %>% 
-  rename(Mean=`Log10 CFU/Cm2...16`, OD=`Lux OD`)
-
+  select(`Final OD`, Treatments, `Lux OD`, `CFU/cm2...15`) %>% 
+  rename(Mean=`CFU/cm2...15`, OD=`Lux OD`) %>% 
+  mutate(OD=as.factor(OD))
 
 
 fig2d %>% 
@@ -69,10 +69,9 @@ fig2d %>%
   summarise(Mean2=mean(Mean), sd=sd(Mean), N=n(), se=sd/sqrt(N)) %>% 
   mutate(Mean=Mean2) %>% 
   ggplot(aes(OD, Mean)) +
-  geom_smooth(method = "lm", color="Red", se = FALSE)+
-  geom_jitter(data=fig2d, size=2, alpha=0.5)+
-  geom_point(size=4, alpha=0.8, color="Red3")+
-  geom_errorbar(aes(ymin = Mean - se, ymax = Mean + se), width = 0.1)+
+  geom_bar(stat="identity",fill="gray", color="black")+
+  geom_errorbar(aes(ymin = Mean - se, ymax = Mean + se), width = 0.05)+
+  geom_jitter(data=fig2d, size=3, alpha=0.5, width = 0.08)+
   facet_rep_wrap(.~`Final OD`, nrow = 2, repeat.tick.labels = "all")+
   theme_Publication(base_size = 12)
 
@@ -89,8 +88,6 @@ ggsave(
   height = 12,
   units = "cm"
 )
-
-
 
 
 
