@@ -12,10 +12,10 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 fig3b <-
   read_excel(
-    "../data/supp_tables_dataset_AgroLux_paper_v3.xlsx",
+    "../data/supp_tables_dataset_AgroLux_paper_v5.xlsx",
     sheet = 5,
     skip = 7,
-    n_max = 49
+    n_max = 42
   ) %>%
   group_by(Treatments, `Leaf*`) %>%
   summarise(Mean = mean(`Mean**`)) %>%
@@ -61,6 +61,7 @@ ggsave(
   height = 12,
   units = "cm"
 )
+
 ggsave(
   "../results/fig3b.svg",
   width = 7,
@@ -76,19 +77,18 @@ plot(mod_3b)
 
 anova(mod_3b)
 
-stat_3b <- c(" Non significant. [F(2,21)=0.0091, p=0.99]")
+stat_3b <- c(" Non significant. [F(2,18)=0.1797, p=0.1797]")
 
 write.table(stat_3b, file = "../results/stat_fig3b.txt")
 
 # figure 3C ---------------------------------------------------------------
 
-
 fig3c <-
   read_excel(
-    "../data/supp_tables_dataset_AgroLux_paper_v3.xlsx",
+    "../data/supp_tables_dataset_AgroLux_paper_v5.xlsx",
     sheet = 6,
     skip = 7,
-    n_max = 49
+    n_max = 42
   ) %>%
   group_by(Treatments, `Leaf*`) %>%
   summarise(Mean = mean(`Mean – Background**`, na.rm = TRUE)) %>%
@@ -133,6 +133,7 @@ ggsave(
   height = 12,
   units = "cm"
 )
+
 ggsave(
   "../results/fig3c.svg",
   width = 7,
@@ -149,7 +150,7 @@ plot(mod_3c)
 
 anova(mod_3c)
 
-stat_3c <- c(" Non significant. [F(1,14)=0.4321, p=0.52]")
+stat_3c <- c(" Non significant. [F(1,12)=0.51, p=0.48]")
 
 write.table(stat_3c, file = "../results/stat_fig3c.txt")
 
@@ -158,18 +159,18 @@ write.table(stat_3c, file = "../results/stat_fig3c.txt")
 
 fig4c <-
   read_excel(
-    "../data/supp_tables_dataset_AgroLux_paper_v3.xlsx",
+    "../data/supp_tables_dataset_AgroLux_paper_v5.xlsx",
     sheet = 7,
     skip = 7,
-    n_max = 200
+    n_max = 100
   ) %>%
-  group_by(Treatments, Plant, dpi) %>%
-  summarise(Mean = mean(`Mean – Background*`, na.rm = TRUE)) %>%
-  mutate(Mean = ifelse(Mean < 0, 0, Mean), Mean = Mean / 100) %>%
-  filter(Treatments != "Ctrl") %>%
+  mutate(Mean = `Mean – Background*`) %>%
+  mutate(Mean = ifelse(Mean < 0, 0, Mean)) %>%
+  filter(Treatments!="Ctrl") %>% 
   mutate(
     Treatments = as.factor(Treatments),
-    Treatments = fct_relevel(Treatments, "Low", "Medium", "High")
+    Treatments = fct_relevel(Treatments, "Low", "High"),
+    dpi=as.factor(dpi)
   )
 
 
@@ -201,9 +202,9 @@ fig4c %>%
     alpha = 0.6
   ) +
   theme_Publication(base_size = 12) +
-  ylab("Luminescence (RLU X 100)") +
-  theme(legend.position = "none") +
-  scale_fill_manual(values = c("red", "orange", "yellow"))
+  ylab("Luminescence (RLU)") +
+ theme(legend.position = "none") +
+  scale_fill_manual(values = c("red", "orange"))
 
 
 ggsave(
@@ -222,28 +223,31 @@ ggsave(
 
 # statistical significance at each DPIs
 
-mod_dpis <- map(1:4, function(x) {
-  fig4c.mod <- fig4c %>%
-    filter(dpi == x) %>%
-    mutate(Treatments = as.factor(Treatments))
+for (i in seq_along(1:4)) {
   
-  dpi_1_aov <- gls(Mean ~ Treatments, data = fig4c.mod)
+  C1 <- fig4c %>%
+    filter(dpi == i, Treatments=="Low") %>% 
+    select(Mean)
   
-  anova(dpi_1_aov) []
+  T1 <- fig4c %>%
+    filter(dpi == i, Treatments=="High") %>% 
+    select(Mean)
   
+  print(t.test(as.vector(C1), as.vector(T1)))
   
-})
+}
+
 
 # non significant
 
 p.value <-
   data.frame(
     dpi = 1:4,
-    anova = c(
-      "F(2,9)= 2.032, p=0.18",
-      "F(2,9)= 0.16, p=0.85",
-      "F(2,9)= 0.89, p=0.44",
-      "F(2,9)= 1.12, p=0.37"
+    t.test = c(
+      "p=0.01",
+      "p=0.8",
+      "p=0.18",
+      "p=0.44"
     )
   )
 
@@ -255,7 +259,7 @@ write_csv(p.value, "../results/pvalues_fig4c.csv")
 
 fig4d <-
   read_excel(
-    "../data/supp_tables_dataset_AgroLux_paper_v3.xlsx",
+    "../data/supp_tables_dataset_AgroLux_paper_v5.xlsx",
     sheet = 8,
     skip = 7,
     n_max = 200
@@ -266,7 +270,7 @@ fig4d <-
   mutate(Mean = ifelse(Mean < 0, 0, Mean), Mean = Mean / 1000) %>%
   mutate(
     Treatments = as.factor(Treatments),
-    Treatments = fct_relevel(Treatments, "Low", "Medium", "High")
+    Treatments = fct_relevel(Treatments, "Low", "High")
   )
 
 fig4d %>%
@@ -319,42 +323,38 @@ ggsave(
 )
 
 
-# model comparison at each dpi
+# statistical significance at each DPIs
 
-comp.mod <- map(1:4, function(x) {
-  fig4d.mod <- fig4d %>%
-    filter(dpi == x) %>%
-    mutate(Treatments = as.factor(Treatments))
+for (i in 2:4) {
   
-  dpi_aov <- gls(Mean ~ Treatments, data = fig4d.mod)
+  print(i)
   
-  # accounting for non-heterogeneity
-  vs <- varIdent(form = ~ 1 | Treatments)
-  dpi_aov_het <-
-    gls(Mean ~ Treatments, data = fig4d.mod, weights = vs)
+  C1 <- fig4d %>%
+    filter(dpi ==i, Treatments=="Low") %>% 
+    select(Mean)
   
-  print(anova(dpi_aov, dpi_aov_het))
+  T1 <- fig4d %>%
+    filter(dpi == i, Treatments=="High") %>% 
+    select(Mean)
   
-  print(anova(dpi_aov_het))
+  print(t.test(as.vector(C1$Mean), as.vector(T1$Mean)))
   
-})
+}
 
-# Only at 4 dpi the more complex model is better. It is also the only model to have significance of the results.
 
+# significant at 4 dpi
 
 p.value <-
   data.frame(
-    dpi = 1:4,
-    anova = c(
-      "F(2,9)= 0.26, p=0.77",
-      "F(2,9)= 1.45, p=0.28",
-      "F(2,9)= 0.99, p=0.40",
-      "F(2,9)= 36.48, p<0.0001"
+    dpi = 2:4,
+    t.test = c(
+      "p=0.11",
+      "p=0.07",
+      "p=0.00025"
     )
   )
 
 write_csv(p.value, "../results/pvalues_fig4d.csv")
-
 
 
 # figure 5b ---------------------------------------------------------------
@@ -362,7 +362,7 @@ write_csv(p.value, "../results/pvalues_fig4d.csv")
 
 fig5b <-
   read_excel(
-    "../data/supp_tables_dataset_AgroLux_paper_v3.xlsx",
+    "../data/supp_tables_dataset_AgroLux_paper_v5.xlsx",
     sheet = 9,
     skip = 7,
     n_max = 37
@@ -400,13 +400,13 @@ fig5b %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggsave(
-  "../results/fig4b.pdf",
+  "../results/fig5b.pdf",
   width = 10,
   height = 12,
   units = "cm"
 )
 ggsave(
-  "../results/fig4b.svg",
+  "../results/fig5b.svg",
   width = 10,
   height = 12,
   units = "cm"
@@ -470,7 +470,7 @@ write_csv(p.value, "../results/pvalues_figure5b.csv")
 
 fig6b <-
   read_excel(
-    "../data/supp_tables_dataset_AgroLux_paper_v3.xlsx",
+    "../data/supp_tables_dataset_AgroLux_paper_v5.xlsx",
     sheet = 12,
     skip = 7,
     n_max = 49
@@ -514,6 +514,7 @@ ggsave(
   height = 12,
   units = "cm"
 )
+
 ggsave(
   "../results/fig6b.svg",
   width = 10,
@@ -593,7 +594,7 @@ write_csv(p.value, "../results/pvalues_figure6b.csv")
 
 fig6c <-
   read_excel(
-    "../data/supp_tables_dataset_AgroLux_paper_v3.xlsx",
+    "../data/supp_tables_dataset_AgroLux_paper_v5.xlsx",
     sheet = 13,
     skip = 7,
     n_max = 49
@@ -630,6 +631,21 @@ fig6c %>%
   ylab("Fluorescence (RLU X 1000)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   facet_wrap( ~ dpi, ncol = 2)
+
+
+ggsave(
+  "../results/fig6c.pdf",
+  width = 10,
+  height = 12,
+  units = "cm"
+)
+
+ggsave(
+  "../results/fig6c.svg",
+  width = 10,
+  height = 12,
+  units = "cm"
+)
 
 
 # Groups for statistical significance

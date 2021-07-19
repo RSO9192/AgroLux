@@ -1,1 +1,1 @@
-Non significant. [F(2,21)=0.0091, p=0.99]"
+Non significant. [F(2,18)=0.1797, p=0.1797]"
