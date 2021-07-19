@@ -1,14 +1,52 @@
 library(tidyverse)
 library(readxl)
 library(lme4)
+library(lemon)
 library(nlme)
 source("~/theme_publication.R")
 
 
-# figure 2B ---------------------------------------------------------------
-
-
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
+
+# figure 2B-C -------------------------------------------------------------
+
+fig2b <-
+  read_excel(
+    "../data/supp_tables_dataset_AgroLux_paper_v5.xlsx",
+    sheet = 3,
+    skip = 7,
+    n_max = 200
+  ) %>%
+  group_by(Treatments, Leaf, `Final OD`) %>%
+  summarise(Mean = mean(Luminescence), OD=mean(`Lux OD`)) %>%
+  mutate(
+    Treatments = as.factor(Treatments))
+
+fig2b %>% 
+  ggplot(aes(OD, Mean)) +
+  geom_jitter(size=2, alpha=0.8)+
+  geom_smooth(method = "lm", color="Red")+
+  facet_rep_wrap(.~`Final OD`, nrow = 2, repeat.tick.labels = "all")+
+  theme_Publication(base_size = 12)+
+  ggsave(
+    "../results/fig2b.pdf",
+    width = 7,
+    height = 12,
+    units = "cm"
+  )
+
+ggsave(
+  "../results/fig2b.svg",
+  width = 7,
+  height = 12,
+  units = "cm"
+)
+
+
+
+# figure 3B ---------------------------------------------------------------
+
 
 fig3b <-
   read_excel(
@@ -171,7 +209,9 @@ fig4c <-
     Treatments = as.factor(Treatments),
     Treatments = fct_relevel(Treatments, "Low", "High"),
     dpi=as.factor(dpi)
-  )
+  ) %>% 
+  group_by(Treatments, dpi, Plant) %>% 
+  summarise(Mean=mean(Mean))
 
 
 fig4c %>%
@@ -233,7 +273,7 @@ for (i in seq_along(1:4)) {
     filter(dpi == i, Treatments=="High") %>% 
     select(Mean)
   
-  print(t.test(as.vector(C1), as.vector(T1)))
+  print(t.test(as.vector(C1$Mean), as.vector(T1$Mean)))
   
 }
 
@@ -244,10 +284,10 @@ p.value <-
   data.frame(
     dpi = 1:4,
     t.test = c(
-      "p=0.01",
-      "p=0.8",
-      "p=0.18",
-      "p=0.44"
+      "p=0.03",
+      "p=0.81",
+      "p=0.31",
+      "p=0.36"
     )
   )
 
