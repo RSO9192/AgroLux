@@ -24,11 +24,17 @@ fig2b <-
     Treatments = as.factor(Treatments))
 
 fig2b %>% 
+  group_by(`Final OD`, OD) %>% 
+  summarise(Mean2=mean(Mean), sd=sd(Mean), N=n(), se=sd/sqrt(N)) %>% 
+  mutate(Mean=Mean2) %>% 
   ggplot(aes(OD, Mean)) +
-  geom_jitter(size=2, alpha=0.8)+
-  geom_smooth(method = "lm", color="Red")+
+  geom_smooth(method = "lm", color="Red", se = FALSE)+
+  geom_jitter(data=fig2b, size=2, alpha=0.5)+
+  geom_point(size=4, alpha=0.8, color="Red3")+
+  geom_errorbar(aes(ymin = Mean - se, ymax = Mean + se), width = 0.1)+
   facet_rep_wrap(.~`Final OD`, nrow = 2, repeat.tick.labels = "all")+
-  theme_Publication(base_size = 12)+
+  theme_Publication(base_size = 12)
+
   ggsave(
     "../results/fig2b.pdf",
     width = 7,
